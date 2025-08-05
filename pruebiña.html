@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Observatorio Inmobiliario Bogotá</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ECharts CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <!-- Font Awesome for icons (for bar chart icons if needed, though SVGs are used in JS) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Custom styles to override or enhance Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            /* Light gray background, similar to the reference */
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            /* White navbar background */
+            border-bottom: 1px solid #e0e0e0;
+            /* Subtle border at the bottom */
+        }
+
+        .container {
+            max-width: 1280px;
+            /* Max width for content */
+        }
+
+        .chart-card {
+            background-color: #ffffff;
+            /* White background for chart cards */
+            border-radius: 0.5rem;
+            /* Rounded corners */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            /* Subtle shadow */
+            padding: 1.5rem;
+            /* Padding inside cards */
+        }
+
+        .echart-container {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        /* Specific height for the map chart */
+        #map-grafico {
+            height: 500px;
+            /* Larger height for the map */
+        }
+
+        /* Responsive adjustments for select elements */
+        select {
+            appearance: none;
+            /* Remove default arrow */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+    </style>
+</head>
+
+<body class="font-inter bg-gray-100 text-gray-800">
+    <!-- Navbar -->
+    <nav class="navbar py-4 px-6 md:px-12 flex items-center justify-between">
+        <!-- Logo -->
+        <div class="flex items-center">
+            <img src="https://placehold.co/50x50/2563eb/ffffff?text=LOGO" alt="Logo Observatorio"
+                class="h-12 w-12 rounded-full mr-3">
+            <span class="text-xl font-bold text-gray-900">Observatorio Inmobiliario Bogotá</span>
+        </div>
+        <!-- Navigation Links -->
+        <div class="hidden md:flex space-x-6">
+            <a href="#" class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200">Inicio</a>
+            <a href="#"
+                class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200">Investigación</a>
+            <a href="#"
+                class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200">Publicaciones</a>
+            <a href="#"
+                class="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200">Contacto</a>
+        </div>
+        <!-- Mobile Menu Button (Hamburger) -->
+        <div class="md:hidden">
+            <button id="mobile-menu-button" class="text-gray-600 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7">
+                    </path>
+                </svg>
+            </button>
+        </div>
+    </nav>
+    <!-- Mobile Menu (Hidden by default) -->
+    <div id="mobile-menu" class="hidden md:hidden bg-white shadow-md py-2 px-6">
+        <a href="#" class="block py-2 text-gray-600 hover:text-blue-600 font-medium">Inicio</a>
+        <a href="#" class="block py-2 text-gray-600 hover:text-blue-600 font-medium">Investigación</a>
+        <a href="#" class="block py-2 text-gray-600 hover:text-blue-600 font-medium">Publicaciones</a>
+        <a href="#" class="block py-2 text-gray-600 hover:text-blue-600 font-medium">Contacto</a>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-8 text-center">Informe de Transacciones
+            Inmobiliarias en Bogotá</h1>
+
+        <!-- Section 1: Main Line Chart (Venta Total de Inmuebles) -->
+        <section class="mb-8 chart-card">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">Venta Total de Inmuebles en Bogotá (Histórico)</h2>
+                <div class="flex flex-wrap justify-center md:justify-end space-x-2 mt-4 md:mt-0">
+                    <select id="filter-line-time"
+                        class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="año">Año</option>
+                        <option value="semestre">Semestre</option>
+                        <option value="trimestre">Trimestre</option>
+                    </select>
+                </div>
+            </div>
+            <p class="text-gray-600 mb-4">Este gráfico muestra la evolución de las ventas totales de inmuebles en Bogotá
+                a lo largo del tiempo, permitiendo analizar tendencias por semestre, trimestre o año.</p>
+            <div id="line-chart" class="echart-container h-96"></div>
+        </section>
+
+        <!-- Section 2: Radar Charts -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div class="chart-card">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Meses con Mayor Dinámica</h2>
+                    <div class="flex flex-wrap justify-center md:justify-end space-x-2 mt-4 md:mt-0">
+                        <select id="filter-radar1-year"
+                            class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                            <option value="2021">2021</option>
+                            <option value="2020">2020</option>
+                            <option value="2019">2019</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-4">Este gráfico de radar compara la actividad de ventas en diferentes meses,
+                    destacando los periodos de mayor dinamismo en el mercado inmobiliario.</p>
+                <div id="radar-chart-months" class="echart-container h-80"></div>
+            </div>
+            <div class="chart-card">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Inmuebles Residenciales Vendidos por Estratos</h2>
+                    <div class="flex flex-wrap justify-center md:justify-end space-x-2 mt-4 md:mt-0">
+                        <select id="filter-radar2-time"
+                            class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="semestre">Semestre</option>
+                            <option value="trimestre">Trimestre</option>
+                            <option value="año">Año</option>
+                        </select>
+                        <select id="filter-radar2-year"
+                            class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                            <option value="2021">2021</option>
+                            <option value="2020">2020</option>
+                            <option value="2019">2019</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-4">Muestra la distribución de ventas de inmuebles residenciales según el
+                    estrato socioeconómico, ofreciendo una visión de la demanda en cada segmento.</p>
+                <div id="radar-chart-strata" class="echart-container h-80"></div>
+            </div>
+        </section>
+
+        <!-- Section 3: Map Chart -->
+        <section class="mb-8 chart-card">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">Mapa Interactivo de Transacciones por Localidad en Bogotá
+                </h2>
+                <div class="flex flex-wrap justify-center md:justify-end space-x-2 mt-4 md:mt-0">
+                    <select id="filter-map-time"
+                        class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="semestre">Semestre</option>
+                        <option value="trimestre">Trimestre</option>
+                        <option value="año">Año</option>
+                    </select>
+                    <select id="filter-map-year"
+                        class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                        <option value="2021">2021</option>
+                        <option value="2020">2020</option>
+                        <option value="2019">2019</option>
+                    </select>
+                </div>
+            </div>
+            <p class="text-gray-600 mb-4">Visualización geográfica de las transacciones inmobiliarias, destacando las
+                localidades con mayor actividad de ventas.</p>
+            <div id="map-grafico" class="echart-container"></div>
+        </section>
+
+        <!-- Section 4: Bar Charts with Icons and Gauge Charts -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div class="chart-card">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Transacciones por Tipo de Propiedad</h2>
+                    <div class="flex flex-wrap justify-center md:justify-end space-x-2 mt-4 md:mt-0">
+                        <select id="filter-icons-time"
+                            class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="año">Año</option>
+                            <option value="semestre">Semestre</option>
+                            <option value="trimestre">Trimestre</option>
+                        </select>
+                        <select id="filter-icons-year"
+                            class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                            <option value="2021">2021</option>
+                            <option value="2020">2020</option>
+                            <option value="2019">2019</option>
+                            <option value="historico">Histórico (2019-2025)</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-4">Este gráfico de barras desglosa las transacciones por tipo de propiedad
+                    (casas, apartamentos, oficinas, locales, etc.).</p>
+                <div id="icons-chart" class="echart-container h-80"></div>
+            </div>
+            <div class="chart-card">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Transacciones por Condición Jurídica</h2>
+                    <div class="flex flex-wrap justify-center md:justify-end space-x-2 mt-4 md:mt-0">
+                        <select id="filter-tort-time"
+                            class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="semestre">Semestre</option>
+                            <option value="trimestre">Trimestre</option>
+                            <option value="año">Año</option>
+                        </select>
+                        <select id="filter-tort-year"
+                            class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                            <option value="2021">2021</option>
+                            <option value="2020">2020</option>
+                            <option value="2019">2019</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-4">Compara las transacciones de inmuebles bajo régimen de propiedad
+                    horizontal y no horizontal.</p>
+                <div id="tort-chart" class="echart-container h-80"></div>
+            </div>
+        </section>
+
+        <!-- Section for Gauge Charts (from original JS, included for completeness) -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div class="chart-card">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Transacciones Residenciales</h2>
+                    <div class="flex flex-wrap justify-center md:justify-end space-x-2 mt-4 md:mt-0">
+                        <select id="filter-residencial-time"
+                            class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="semestre">Semestre</option>
+                            <option value="trimestre">Trimestre</option>
+                            <option value="año">Año</option>
+                        </select>
+                        <select id="filter-residencial-year"
+                            class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                            <option value="2021">2021</option>
+                            <option value="2020">2020</option>
+                            <option value="2019">2019</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-4">Este gráfico de tipo "gauge" muestra el volumen total de transacciones
+                    residenciales.</p>
+                <div id="residencial-chart" class="echart-container h-80"></div>
+            </div>
+            <div class="chart-card">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Transacciones No Residenciales</h2>
+                    <div class="flex flex-wrap justify-center md:justify-end space-x-2 mt-4 md:mt-0">
+                        <select id="filter-noResidencial-time"
+                            class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="semestre">Semestre</option>
+                            <option value="trimestre">Trimestre</option>
+                            <option value="año">Año</option>
+                        </select>
+                        <select id="filter-noResidencial-year"
+                            class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                            <option value="2021">2021</option>
+                            <option value="2020">2020</option>
+                            <option value="2019">2019</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-4">Este gráfico de tipo "gauge" muestra el volumen total de transacciones no
+                    residenciales.</p>
+                <div id="noResidencial-chart" class="echart-container h-80"></div>
+            </div>
+        </section>
+
+        <!-- Section for original chart1: Transacciones por Localidad (Bar Chart) -->
+        <section class="mb-8 chart-card">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">Transacciones por Localidad (Bogotá)</h2>
+                <div class="flex flex-wrap justify-center md:justify-end space-x-2 mt-4 md:mt-0">
+                    <select id="filter-main-bar-time"
+                        class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="semestre">Semestre</option>
+                        <option value="trimestre">Trimestre</option>
+                        <option value="año">Año</option>
+                    </select>
+                    <select id="filter-main-bar-year"
+                        class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                        <option value="2021">2021</option>
+                        <option value="2020">2020</option>
+                        <option value="2019">2019</option>
+                    </select>
+                </div>
+            </div>
+            <p class="text-gray-600 mb-4">Este gráfico de barras muestra el número de transacciones inmobiliarias por
+                localidad en Bogotá.</p>
+            <div id="main-bar-chart" class="echart-container h-96"></div>
+        </section>
+
+    </main>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function () {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // ECharts Theme Registration (essos theme as used in your original JS)
+        echarts.registerTheme('essos', {
+            'color': [
+                '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'
+            ],
+            'backgroundColor': 'rgba(255,255,255,0)', // Transparent background for charts
+            'textStyle': {
+                'fontFamily': 'Inter, sans-serif'
+            },
+            'title': {
+                'textStyle': {
+                    'color': '#333' // Dark text for titles on white background
+                },
+                'subtextStyle': {
+                    'color': '#666'
+                }
+            },
+            'line': {
+                'itemStyle': {
+                    'borderWidth': 1
+                },
+                'lineStyle': {
+                    'width': 2
+                },
+                'symbolSize': 4,
+                'symbol': 'circle',
+                'smooth': false
+            },
+            'bar': {
+                'itemStyle': {
+                    'barBorderWidth': 0,
+                    'barBorderColor': '#ccc'
+                }
+            },
+            'pie': {
+                'itemStyle': {
+                    'borderWidth': 0,
+                    'borderColor': '#ccc'
+                }
+            },
+            'scatter': {
+                'itemStyle': {
+                    'borderWidth': 0,
+                    'borderColor': '#ccc'
+                }
+            },
+            'boxplot': {
+                'itemStyle': {
+                    'borderWidth': 0,
+                    'borderColor': '#ccc'
+                }
+            },
+            'parallel': {
+                'itemStyle': {
+                    'borderWidth': 0,
+                    'borderColor': '#ccc'
+                }
+            },
+            'sankey': {
+                'itemStyle': {
+                    'borderWidth': 0,
+                    'borderColor': '#ccc'
+                }
+            },
+            'funnel': {
+                'itemStyle': {
+                    'borderWidth': 0,
+                    'borderColor': '#ccc'
+                }
+            },
+            'gauge': {
+                'itemStyle': {
+                    'borderWidth': 0,
+                    'borderColor': '#ccc'
+                }
+            },
+            'candlestick': {
+                'itemStyle': {
+                    'color': '#fd1050',
+                    'color0': '#0cf49b',
+                    'borderColor': '#fd1050',
+                    'borderColor0': '#0cf49b',
+                    'borderWidth': 1
+                }
+            },
+            'graph': {
+                'itemStyle': {
+                    'borderWidth': 0,
+                    'borderColor': '#ccc'
+                },
+                'lineStyle': {
+                    'width': 1,
+                    'color': '#aaa'
+                },
+                'symbolSize': 4,
+                'symbol': 'circle',
+                'smooth': false,
+                'label': {
+                    'color': '#eee'
+                }
+            },
+            'map': {
+                'itemStyle': {
+                    'areaColor': '#eee',
+                    'borderColor': '#444',
+                    'borderWidth': 0.5
+                },
+                'label': {
+                    'color': '#000'
+                },
+                'emphasis': {
+                    'itemStyle': {
+                        'areaColor': '#ffdd00',
+                        'borderColor': '#444',
+                        'borderWidth': 1
+                    },
+                    'label': {
+                        'color': '#000'
+                    }
+                }
+            },
+            'geo': {
+                'itemStyle': {
+                    'areaColor': '#eee',
+                    'borderColor': '#444',
+                    'borderWidth': 0.5
+                },
+                'label': {
+                    'color': '#000'
+                },
+                'emphasis': {
+                    'itemStyle': {
+                        'areaColor': '#ffdd00',
+                        'borderColor': '#444',
+                        'borderWidth': 1
+                    },
+                    'label': {
+                        'color': '#000'
+                    }
+                }
+            },
+            'categoryAxis': {
+                'axisLine': {
+                    'show': true,
+                    'lineStyle': {
+                        'color': '#aaa'
+                    }
+                },
+                'axisTick': {
+                    'show': true,
+                    'lineStyle': {
+                        'color': '#aaa'
+                    }
+                },
+                'axisLabel': {
+                    'show': true,
+                    'color': '#333' // Dark text for labels
+                },
+                'splitLine': {
+                    'show': false,
+                    'lineStyle': {
+                        'color': ['#eee']
+                    }
+                },
+                'splitArea': {
+                    'show': false,
+                    'areaStyle': {
+                        'color': ['rgba(250,250,250,0.3)', 'rgba(200,200,200,0.3)']
+                    }
+                }
+            },
+            'valueAxis': {
+                'axisLine': {
+                    'show': true,
+                    'lineStyle': {
+                        'color': '#aaa'
+                    }
+                },
+                'axisTick': {
+                    'show': true,
+                    'lineStyle': {
+                        'color': '#aaa'
+                    }
+                },
+                'axisLabel': {
+                    'show': true,
+                    'color': '#333' // Dark text for labels
+                },
+                'splitLine': {
+                    'show': true,
+                    'lineStyle': {
+                        'color': ['#eee']
+                    }
+                },
+                'splitArea': {
+                    'show': false,
+                    'areaStyle': {
+                        'color': ['rgba(250,250,250,0.3)', 'rgba(200,200,200,0.3)']
+                    }
+                }
+            },
+            'logAxis': {
+                'axisLine': {
+                    'show': true,
+                    'lineStyle': {
+                        'color': '#aaa'
+                    }
+                },
+                'axisTick': {
+                    'show': true,
+                    'lineStyle': {
+                        'color': '#aaa'
+                    }
+                },
+                'axisLabel': {
+                    'show': true,
+                    'color': '#333'
+                },
+                'splitLine': {
+                    'show': true,
+                    'lineStyle': {
+                        'color': ['#eee']
+                    }
+                },
+                'splitArea': {
+                    'show': false,
+                    'areaStyle': {
+                        'color': ['rgba(250,250,250,0.3)', 'rgba(200,200,200,0.3)']
+                    }
+                }
+            },
+            'timeAxis': {
+                'axisLine': {
+                    'show': true,
+                    'lineStyle': {
+                        'color': '#aaa'
+                    }
+                },
+                'axisTick': {
+                    'show': true,
+                    'lineStyle': {
+                        'color': '#aaa'
+                    }
+                },
+                'axisLabel': {
+                    'show': true,
+                    'color': '#333'
+                },
+                'splitLine': {
+                    'show': true,
+                    'lineStyle': {
+                        'color': ['#eee']
+                    }
+                },
+                'splitArea': {
+                    'show': false,
+                    'areaStyle': {
+                        'color': ['rgba(250,250,250,0.3)', 'rgba(200,200,200,0.3)']
+                    }
+                }
+            },
+            'toolbox': {
+                'iconStyle': {
+                    'borderColor': '#999'
+                },
+                'emphasis': {
+                    'iconStyle': {
+                        'borderColor': '#666'
+                    }
+                }
+            },
+            'legend': {
+                'textStyle': {
+                    'color': '#333'
+                }
+            },
+            'tooltip': {
+                'axisPointer': {
+                    'lineStyle': {
+                        'color': '#ccc',
+                        'width': 1
+                    },
+                    'crossStyle': {
+                        'color': '#ccc',
+                        'width': 1
+                    }
+                },
+                'textStyle': {
+                    'color': '#333'
+                }
+            },
+            'timeline': {
+                'lineStyle': {
+                    'color': '#aaa',
+                    'width': 1
+                },
+                'itemStyle': {
+                    'color': '#aaa',
+                    'borderWidth': 1
+                },
+                'controlStyle': {
+                    'color': '#aaa',
+                    'borderColor': '#aaa',
+                    'borderWidth': 0.5
+                },
+                'checkpointStyle': {
+                    'color': '#300000'
+                },
+                'label': {
+                    'color': '#aaa'
+                },
+                'emphasis': {
+                    'itemStyle': {
+                        'color': '#a93344'
+                    },
+                    'controlStyle': {
+                        'color': '#a93344',
+                        'borderColor': '#a93344'
+                    },
+                    'label': {
+                        'color': '#a93344'
+                    }
+                }
+            },
+            'visualMap': {
+                'color': ['#bf4444', '#d88273', '#f6efa6']
+            },
+            'dataZoom': {
+                'handleSize': '80%',
+                'handleStyle': {
+                    'color': '#fff',
+                    'shadowBlur': 3,
+                    'shadowOffsetX': 2,
+                    'shadowOffsetY': 2
+                },
+                'textStyle': {
+                    'color': '#333'
+                },
+                'borderColor': '#aaa'
+            },
+            'markPoint': {
+                'label': {
+                    'color': '#eee'
+                },
+                'itemStyle': {
+                    'borderColor': '#eee'
+                }
+            }
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // --- Funciones para cargar datos desde CSV (Ejemplo) ---
+            // Puedes usar esta función para cargar tus datos reales desde archivos CSV.
+            // Por ahora, los datos son inventados directamente en el código.
+            async function loadCsvData(filePath) {
+                try {
+                    const response = await fetch(filePath);
+                    const text = await response.text();
+                    const lines = text.split('\n').filter(line => line.trim() !== '');
+                    const headers = lines[0].split(',').map(header => header.trim());
+                    const data = lines.slice(1).map(line => {
+                        const values = line.split(',').map(val => val.trim());
+                        let row = {};
+                        headers.forEach((header, i) => {
+                            row[header] = isNaN(Number(values[i])) ? values[i] : Number(values[i]);
+                        });
+                        return row;
+                    });
+                    return data;
+                } catch (error) {
+                    console.error('Error al cargar datos CSV:', error);
+                    return [];
+                }
+            }
+
+            // --- Datos para el gráfico de líneas (Venta Total de Inmuebles) ---
+            const dataLine = [
+                { tipo: "anio", periodo: "2019", total: 67697 },
+                { tipo: "anio", periodo: "2020", total: 67264 },
+                { tipo: "anio", periodo: "2021", total: 103197 },
+                { tipo: "anio", periodo: "2022", total: 103413 },
+                { tipo: "anio", periodo: "2023", total: 82958 },
+                { tipo: "anio", periodo: "2024", total: 90028 },
+                { tipo: "anio", periodo: "2025", total: 30605 },
+
+                { tipo: "semestre", periodo: "2019-1", total: 28952 },
+                { tipo: "semestre", periodo: "2019-2", total: 38745 },
+                { tipo: "semestre", periodo: "2020-1", total: 21744 },
+                { tipo: "semestre", periodo: "2020-2", total: 45520 },
+                { tipo: "semestre", periodo: "2021-1", total: 43876 },
+                { tipo: "semestre", periodo: "2021-2", total: 59321 },
+                { tipo: "semestre", periodo: "2022-1", total: 46650 },
+                { tipo: "semestre", periodo: "2022-2", total: 56763 },
+                { tipo: "semestre", periodo: "2023-1", total: 32523 },
+                { tipo: "semestre", periodo: "2023-2", total: 50435 },
+                { tipo: "semestre", periodo: "2024-1", total: 37446 },
+                { tipo: "semestre", periodo: "2024-2", total: 52582 },
+                { tipo: "semestre", periodo: "2025-1", total: 30602 },
+                { tipo: "semestre", periodo: "2025-2", total: 3 },
+
+                { tipo: "trimestre", periodo: "2019-1", total: 14230 },
+                { tipo: "trimestre", periodo: "2019-2", total: 14722 },
+                { tipo: "trimestre", periodo: "2019-3", total: 20537 },
+                { tipo: "trimestre", periodo: "2019-4", total: 18208 },
+                { tipo: "trimestre", periodo: "2020-1", total: 12648 },
+                { tipo: "trimestre", periodo: "2020-2", total: 9096 },
+                { tipo: "trimestre", periodo: "2020-3", total: 17220 },
+                { tipo: "trimestre", periodo: "2020-4", total: 28300 },
+                { tipo: "trimestre", periodo: "2021-1", total: 18973 },
+                { tipo: "trimestre", periodo: "2021-2", total: 24903 },
+                { tipo: "trimestre", periodo: "2021-3", total: 27254 },
+                { tipo: "trimestre", periodo: "2021-4", total: 32067 },
+                { tipo: "trimestre", periodo: "2022-1", total: 21300 },
+                { tipo: "trimestre", periodo: "2022-2", total: 25350 },
+                { tipo: "trimestre", periodo: "2022-3", total: 26754 },
+                { tipo: "trimestre", periodo: "2022-4", total: 30009 },
+                { tipo: "trimestre", periodo: "2023-1", total: 11180 },
+                { tipo: "trimestre", periodo: "2023-2", total: 21343 },
+                { tipo: "trimestre", periodo: "2023-3", total: 23871 },
+                { tipo: "trimestre", periodo: "2023-4", total: 26564 },
+                { tipo: "trimestre", periodo: "2024-1", total: 15103 },
+                { tipo: "trimestre", periodo: "2024-2", total: 22343 },
+                { tipo: "trimestre", periodo: "2024-3", total: 24438 },
+                { tipo: "trimestre", periodo: "2024-4", total: 28144 },
+                { tipo: "trimestre", periodo: "2025-1", total: 16267 },
+                { tipo: "trimestre", periodo: "2025-2", total: 14335 }
+            ];
+
+            // --- Datos para el gráfico de radar (Meses con Mayor Dinámica) ---
+            const datosRadar = [
+                { periodo: "2019-01", valor: 762 },
+                { periodo: "2019-02", valor: 3253 },
+                { periodo: "2019-03", valor: 5810 },
+                { periodo: "2019-04", valor: 6342 },
+                { periodo: "2019-05", valor: 7 },
+                { periodo: "2019-06", valor: 5660 },
+                { periodo: "2019-07", valor: 8135 },
+                { periodo: "2019-08", valor: 6906 },
+                { periodo: "2019-09", valor: 7064 },
+                { periodo: "2019-10", valor: 6790 },
+                { periodo: "2019-11", valor: 6804 },
+                { periodo: "2019-12", valor: 4765 },
+                { periodo: "2020-01", valor: 4382 },
+                { periodo: "2020-02", valor: 6586 },
+                { periodo: "2020-03", valor: 3077 },
+                { periodo: "2020-04", valor: 2487 },
+                { periodo: "2020-05", valor: 4074 },
+                { periodo: "2020-06", valor: 4116 },
+                { periodo: "2020-07", valor: 5564 },
+                { periodo: "2020-08", valor: 4006 },
+                { periodo: "2020-09", valor: 6199 },
+                { periodo: "2020-10", valor: 10132 },
+                { periodo: "2020-11", valor: 7745 },
+                { periodo: "2020-12", valor: 9055 },
+                { periodo: "2021-01", valor: 6385 },
+                { periodo: "2021-02", valor: 9340 },
+                { periodo: "2021-03", valor: 8582 },
+                { periodo: "2021-04", valor: 7558 },
+                { periodo: "2021-05", valor: 7840 },
+                { periodo: "2021-06", valor: 8460 },
+                { periodo: "2021-07", valor: 8913 },
+                { periodo: "2021-08", valor: 9346 },
+                { periodo: "2021-09", valor: 9977 },
+                { periodo: "2021-10", valor: 9680 },
+                { periodo: "2021-11", valor: 8995 },
+                { periodo: "2021-12", valor: 12322 },
+                { periodo: "2022-01", valor: 7191 },
+                { periodo: "2022-02", valor: 9996 },
+                { periodo: "2022-03", valor: 10306 },
+                { periodo: "2022-04", valor: 8068 },
+                { periodo: "2022-05", valor: 9499 },
+                { periodo: "2022-06", valor: 9068 },
+                { periodo: "2022-07", valor: 8808 },
+                { periodo: "2022-08", valor: 10494 },
+                { periodo: "2022-09", valor: 9920 },
+                { periodo: "2022-10", valor: 8773 },
+                { periodo: "2022-11", valor: 8757 },
+                { periodo: "2022-12", valor: 11460 },
+                { periodo: "2023-01", valor: 5311 },
+                { periodo: "2023-02", valor: 10424 },
+                { periodo: "2023-03", valor: 1015 },
+                { periodo: "2023-04", valor: 6566 },
+                { periodo: "2023-05", valor: 8095 },
+                { periodo: "2023-06", valor: 7547 },
+                { periodo: "2023-07", valor: 7294 },
+                { periodo: "2023-08", valor: 8549 },
+                { periodo: "2023-09", valor: 8744 },
+                { periodo: "2023-10", valor: 8550 },
+                { periodo: "2023-11", valor: 8573 },
+                { periodo: "2023-12", valor: 9804 },
+                { periodo: "2024-01", valor: 5798 },
+                { periodo: "2024-02", valor: 8717 },
+                { periodo: "2024-03", valor: 5787 },
+                { periodo: "2024-04", valor: 8605 },
+                { periodo: "2024-05", valor: 8975 },
+                { periodo: "2024-06", valor: 6706 },
+                { periodo: "2024-07", valor: 9402 },
+                { periodo: "2024-08", valor: 9001 },
+                { periodo: "2024-09", valor: 9353 },
+                { periodo: "2024-10", valor: 10462 },
+                { periodo: "2024-11", valor: 9961 },
+                { periodo: "2024-12", valor: 12626 },
+                { periodo: "2025-01", valor: 7207 },
+                { periodo: "2025-02", valor: 11736 },
+                { periodo: "2025-03", valor: 10089 },
+                { periodo: "2025-04", valor: 8989 },
+                { periodo: "2025-05", valor: 9533 },
+                { periodo: "2025-06", valor: 9350 }
+            ];
+
+
+            // --- Datos para el gráfico de iconos (Transacciones por Tipo de Propiedad) ---
+            const propertyTypeData = {
+                2019: [
+                    { value: 24575, name: 'Apartamento' },
+                    { value: 8819, name: 'Casa' },
+                    { value: 1104, name: 'Local' },
+                    { value: 1355, name: 'Oficina' },
+                    { value: 16043, name: 'Resto' }
+                ],
+                2020: [
+                    { value: 24714, name: 'Apartamento' },
+                    { value: 7509, name: 'Casa' },
+                    { value: 969, name: 'Local' },
+                    { value: 1207, name: 'Oficina' },
+                    { value: 16733, name: 'Resto' }
+                ],
+                2021: [
+                    { value: 38543, name: 'Apartamento' },
+                    { value: 11497, name: 'Casa' },
+                    { value: 1334, name: 'Local' },
+                    { value: 1666, name: 'Oficina' },
+                    { value: 25255, name: 'Resto' }
+                ],
+                2022: [
+                    { value: 39275, name: 'Apartamento' },
+                    { value: 11670, name: 'Casa' },
+                    { value: 1323, name: 'Local' },
+                    { value: 1654, name: 'Oficina' },
+                    { value: 25138, name: 'Resto' }
+                ],
+                2023: [
+                    { value: 26820, name: 'Apartamento' },
+                    { value: 8709, name: 'Casa' },
+                    { value: 1107, name: 'Local' },
+                    { value: 1257, name: 'Oficina' },
+                    { value: 16739, name: 'Resto' }
+                ],
+                2024: [
+                    { value: 35055, name: 'Apartamento' },
+                    { value: 9388, name: 'Casa' },
+                    { value: 1301, name: 'Local' },
+                    { value: 1360, name: 'Oficina' },
+                    { value: 20227, name: 'Resto' }
+                ],
+                2025: [
+                    { value: 16706, name: 'Apartamento' },
+                    { value: 3825, name: 'Casa' },
+                    { value: 470, name: 'Local' },
+                    { value: 598, name: 'Oficina' },
+                    { value: 9006, name: 'Resto' }
+                ],
+                semestre: {
+                    "2019-1": [
+                        { value: 10921, name: "Apartamento" },
+                        { value: 3975, name: "Casa" },
+                        { value: 466, name: "Local" },
+                        { value: 544, name: "Oficina" },
+                        { value: 6984, name: "Resto" }
+                    ],
+                    "2019-2": [
+                        { value: 13654, name: "Apartamento" },
+                        { value: 4844, name: "Casa" },
+                        { value: 638, name: "Local" },
+                        { value: 811, name: "Oficina" },
+                        { value: 9059, name: "Resto" }
+                    ],
+                    "2020-1": [
+                        { value: 8812, name: "Apartamento" },
+                        { value: 2590, name: "Casa" },
+                        { value: 324, name: "Local" },
+                        { value: 476, name: "Oficina" },
+                        { value: 5711, name: "Resto" }
+                    ],
+                    "2020-2": [
+                        { value: 15902, name: "Apartamento" },
+                        { value: 4919, name: "Casa" },
+                        { value: 645, name: "Local" },
+                        { value: 731, name: "Oficina" },
+                        { value: 11022, name: "Resto" }
+                    ],
+                    "2021-1": [
+                        { value: 17542, name: "Apartamento" },
+                        { value: 5065, name: "Casa" },
+                        { value: 546, name: "Local" },
+                        { value: 712, name: "Oficina" },
+                        { value: 11325, name: "Resto" }
+                    ],
+                    "2021-2": [
+                        { value: 21001, name: "Apartamento" },
+                        { value: 6432, name: "Casa" },
+                        { value: 788, name: "Local" },
+                        { value: 954, name: "Oficina" },
+                        { value: 13930, name: "Resto" }
+                    ],
+                    "2022-1": [
+                        { value: 18538, name: "Apartamento" },
+                        { value: 5284, name: "Casa" },
+                        { value: 609, name: "Local" },
+                        { value: 676, name: "Oficina" },
+                        { value: 11565, name: "Resto" }
+                    ],
+                    "2022-2": [
+                        { value: 20737, name: "Apartamento" },
+                        { value: 6386, name: "Casa" },
+                        { value: 714, name: "Local" },
+                        { value: 978, name: "Oficina" },
+                        { value: 13573, name: "Resto" }
+                    ],
+                    "2023-1": [
+                        { value: 11449, name: "Apartamento" },
+                        { value: 3747, name: "Casa" },
+                        { value: 477, name: "Local" },
+                        { value: 476, name: "Oficina" },
+                        { value: 6817, name: "Resto" }
+                    ],
+                    "2023-2": [
+                        { value: 15371, name: "Apartamento" },
+                        { value: 4962, name: "Casa" },
+                        { value: 630, name: "Local" },
+                        { value: 781, name: "Oficina" },
+                        { value: 9922, name: "Resto" }
+                    ],
+                    "2024-1": [
+                        { value: 15492, name: "Apartamento" },
+                        { value: 4237, name: "Casa" },
+                        { value: 554, name: "Local" },
+                        { value: 550, name: "Oficina" },
+                        { value: 8699, name: "Resto" }
+                    ],
+                    "2024-2": [
+                        { value: 19563, name: "Apartamento" },
+                        { value: 5151, name: "Casa" },
+                        { value: 747, name: "Local" },
+                        { value: 810, name: "Oficina" },
+                        { value: 11528, name: "Resto" }
+                    ],
+                    "2025-1": [
+                        { value: 16705, name: "Apartamento" },
+                        { value: 3825, name: "Casa" },
+                        { value: 470, name: "Local" },
+                        { value: 598, name: "Oficina" },
+                        { value: 9004, name: "Resto" }
+                    ],
+                    "2025-2": [
+                        { value: 1, name: "Apartamento" },
+                        { value: 0, name: "Casa" },
+                        { value: 0, name: "Local" },
+                        { value: 0, name: "Oficina" },
+                        { value: 2, name: "Resto" }
+                    ]
+                },
+                trimestre: {
+                    "2019-1": [{ value: 5979, name: "Apartamento" }, { value: 2070, name: "Casa" }, { value: 240, name: "Local" }, { value: 256, name: "Oficina" }, { value: 3835, name: "Resto" }],
+                    "2019-2": [{ value: 4942, name: "Apartamento" }, { value: 1905, name: "Casa" }, { value: 226, name: "Local" }, { value: 288, name: "Oficina" }, { value: 3149, name: "Resto" }],
+                    "2019-3": [{ value: 7553, name: "Apartamento" }, { value: 2618, name: "Casa" }, { value: 325, name: "Local" }, { value: 422, name: "Oficina" }, { value: 4942, name: "Resto" }],
+                    "2019-4": [{ value: 6101, name: "Apartamento" }, { value: 2226, name: "Casa" }, { value: 313, name: "Local" }, { value: 389, name: "Oficina" }, { value: 4117, name: "Resto" }],
+                    "2020-1": [{ value: 5314, name: "Apartamento" }, { value: 1669, name: "Casa" }, { value: 249, name: "Local" }, { value: 331, name: "Oficina" }, { value: 3336, name: "Resto" }],
+                    "2020-2": [{ value: 3498, name: "Apartamento" }, { value: 921, name: "Casa" }, { value: 75, name: "Local" }, { value: 145, name: "Oficina" }, { value: 2375, name: "Resto" }],
+                    "2020-3": [{ value: 6393, name: "Apartamento" }, { value: 1911, name: "Casa" }, { value: 244, name: "Local" }, { value: 275, name: "Oficina" }, { value: 4414, name: "Resto" }],
+                    "2020-4": [{ value: 9509, name: "Apartamento" }, { value: 3008, name: "Casa" }, { value: 401, name: "Local" }, { value: 456, name: "Oficina" }, { value: 6608, name: "Resto" }],
+                    "2021-1": [{ value: 8217, name: "Apartamento" }, { value: 2327, name: "Casa" }, { value: 225, name: "Local" }, { value: 296, name: "Oficina" }, { value: 5081, name: "Resto" }],
+                    "2021-2": [{ value: 9325, name: "Apartamento" }, { value: 2738, name: "Casa" }, { value: 321, name: "Local" }, { value: 416, name: "Oficina" }, { value: 6244, name: "Resto" }],
+                    "2021-3": [{ value: 10017, name: "Apartamento" }, { value: 2964, name: "Casa" }, { value: 340, name: "Local" }, { value: 407, name: "Oficina" }, { value: 6401, name: "Resto" }],
+                    "2021-4": [{ value: 10984, name: "Apartamento" }, { value: 3468, name: "Casa" }, { value: 448, name: "Local" }, { value: 547, name: "Oficina" }, { value: 7529, name: "Resto" }],
+                    "2022-1": [{ value: 8574, name: "Apartamento" }, { value: 2437, name: "Casa" }, { value: 311, name: "Local" }, { value: 366, name: "Oficina" }, { value: 5365, name: "Resto" }],
+                    "2022-2": [{ value: 9964, name: "Apartamento" }, { value: 2847, name: "Casa" }, { value: 298, name: "Local" }, { value: 310, name: "Oficina" }, { value: 6200, name: "Resto" }],
+                    "2022-3": [{ value: 10048, name: "Apartamento" }, { value: 3097, name: "Casa" }, { value: 303, name: "Local" }, { value: 412, name: "Oficina" }, { value: 6372, name: "Resto" }],
+                    "2022-4": [{ value: 10689, name: "Apartamento" }, { value: 3289, name: "Casa" }, { value: 411, name: "Local" }, { value: 566, name: "Oficina" }, { value: 7201, name: "Resto" }],
+                    "2023-1": [{ value: 4278, name: "Apartamento" }, { value: 1340, name: "Casa" }, { value: 151, name: "Local" }, { value: 181, name: "Oficina" }, { value: 2461, name: "Resto" }],
+                    "2023-2": [{ value: 7171, name: "Apartamento" }, { value: 2407, name: "Casa" }, { value: 326, name: "Local" }, { value: 295, name: "Oficina" }, { value: 4356, name: "Resto" }],
+                    "2023-3": [{ value: 7337, name: "Apartamento" }, { value: 2381, name: "Casa" }, { value: 299, name: "Local" }, { value: 363, name: "Oficina" }, { value: 4627, name: "Resto" }],
+                    "2023-4": [{ value: 8034, name: "Apartamento" }, { value: 2581, name: "Casa" }, { value: 331, name: "Local" }, { value: 418, name: "Oficina" }, { value: 5295, name: "Resto" }],
+                    "2024-1": [{ value: 6599, name: "Apartamento" }, { value: 1872, name: "Casa" }, { value: 231, name: "Local" }, { value: 235, name: "Oficina" }, { value: 3627, name: "Resto" }],
+                    "2024-2": [{ value: 8893, name: "Apartamento" }, { value: 2365, name: "Casa" }, { value: 323, name: "Local" }, { value: 315, name: "Oficina" }, { value: 5072, name: "Resto" }],
+                    "2024-3": [{ value: 9074, name: "Apartamento" }, { value: 2357, name: "Casa" }, { value: 382, name: "Local" }, { value: 340, name: "Oficina" }, { value: 5102, name: "Resto" }],
+                    "2024-4": [{ value: 10489, name: "Apartamento" }, { value: 2794, name: "Casa" }, { value: 365, name: "Local" }, { value: 470, name: "Oficina" }, { value: 6426, name: "Resto" }],
+                    "2025-1": [{ value: 8773, name: "Apartamento" }, { value: 2119, name: "Casa" }, { value: 261, name: "Local" }, { value: 351, name: "Oficina" }, { value: 4763, name: "Resto" }],
+                    "2025-2": [{ value: 7932, name: "Apartamento" }, { value: 1706, name: "Casa" }, { value: 209, name: "Local" }, { value: 247, name: "Oficina" }, { value: 4241, name: "Resto" }]
+                }
+            };
+
+            // --- Gráfico 1: Línea - Venta Total de Inmuebles en Bogotá (Main Chart) ---
+            var lineChart = echarts.init(document.getElementById("line-chart"), "essos");
+            var chartRadarMonths = echarts.init(document.getElementById("radar-chart-months"), "essos");
+            var chartRadarStrata = echarts.init(document.getElementById("radar-chart-strata"), "essos");
+            var chartMap = echarts.init(document.getElementById("map-grafico"), "essos");
+            var chartIcons = echarts.init(document.getElementById("icons-chart"), "essos");
+
+            // Función para actualizar el gráfico de línea y el radar
+            function updateLineChart(timePeriod) {
+                let filteredData = [];
+                let chartTitle = 'Venta Total de Inmuebles en Bogotá';
+                let selectedYear = '2024'; // Año por defecto
+
+                if (timePeriod === 'año') {
+                    // Para vista por años, mostrar todos los años
+                    filteredData = dataLine.filter(d => d.tipo === 'anio');
+                    chartTitle += ' (2019-2025)';
+                    selectedYear = '2024'; // Año actual por defecto
+                } else if (timePeriod === 'semestre') {
+                    // Mostrar todos los semestres desde 2019 hasta 2025
+                    filteredData = dataLine.filter(d => d.tipo === 'semestre');
+                    chartTitle += ' (Semestral)';
+                    selectedYear = '2024';
+                } else if (timePeriod === 'trimestre') {
+                    // Mostrar todos los trimestres desde 2019 hasta 2025
+                    filteredData = dataLine.filter(d => d.tipo === 'trimestre');
+                    chartTitle += ' (Trimestral)';
+                    selectedYear = '2024';
+                }
+                
+                // Actualizar también el gráfico radar
+                updateRadarChart(selectedYear);
+
+                const optionLine = {
+                    title: {
+                        text: chartTitle,
+                        left: 'center',
+                        top: '20px'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function (params) {
+                            return params[0].name + ': ' + params[0].value.toLocaleString('es-CO') + ' transacciones';
+                        }
+                    },
+                    grid: {
+                        left: '5%',
+                        right: '5%',
+                        bottom: '15%',
+                        top: '15%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: filteredData.map(d => d.periodo),
+                        axisLabel: {
+                            fontSize: 12,
+                            color: '#333',
+                            rotate: timePeriod === 'año' ? 0 : 45,
+                            interval: 0
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLabel: {
+                            fontSize: 12,
+                            color: '#333',
+                            formatter: function (value) {
+                                return value.toLocaleString('es-CO');
+                            }
+                        },
+                        splitLine: {
+                            lineStyle: {
+                                type: 'dashed'
+                            }
+                        }
+                    },
+                    series: [{
+                        name: 'Total',
+                        type: 'line',
+                        data: filteredData.map(d => d.total),
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        lineStyle: {
+                            width: 3
+                        },
+                        itemStyle: {
+                            color: '#5470c6'
+                        },
+                        areaStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0,
+                                y: 0,
+                                x2: 0,
+                                y2: 1,
+                                colorStops: [{
+                                    offset: 0,
+                                    color: 'rgba(84,112,198,0.3)'
+                                }, {
+                                    offset: 1,
+                                    color: 'rgba(84,112,198,0.1)'
+                                }]
+                            }
+                        }
+                    }]
+                };
+
+                lineChart.setOption(optionLine, true);
+            }
+
+            var loadingOptionLine = {
+                graphic: {
+                    elements: [{
+                        type: 'group',
+                        left: 'center',
+                        top: 'center',
+                        children: new Array(7).fill(0).map((val, i) => ({
+                            type: 'rect',
+                            x: i * 20,
+                            shape: { x: 0, y: -40, width: 10, height: 80 },
+                            style: { fill: '#5470c6' },
+                            keyframeAnimation: {
+                                duration: 1000,
+                                delay: i * 200,
+                                loop: true,
+                                keyframes: [
+                                    { percent: 0.5, scaleY: 0.3, easing: 'cubicIn' },
+                                    { percent: 1, scaleY: 1, easing: 'cubicOut' }
+                                ]
+                            }
+                        }))
+                    }]
+                }
+            };
+            lineChart.setOption(loadingOptionLine);
+
+            // Inicializar el gráfico con los datos por año
+            updateLineChart('año');
+
+            // Event listener para el cambio de año en el gráfico radar
+            document.getElementById('filter-radar1-year').addEventListener('change', function() {
+                const selectedYear = this.value;
+                updateRadarChart(selectedYear);
+            });
+
+            // --- Gráfico 2: Radar - Meses con Mayor Dinámica ---
+            var chartRadarMonths = echarts.init(document.getElementById("radar-chart-months"), "essos");
+            var loadingOptionRadar = {
+                graphic: {
+                    elements: [{
+                        type: 'group',
+                        left: 'center',
+                        top: 'center',
+                        children: new Array(7).fill(0).map((val, i) => ({
+                            type: 'rect',
+                            x: i * 20,
+                            shape: { x: 0, y: -40, width: 10, height: 80 },
+                            style: { fill: '#5470c6' },
+                            keyframeAnimation: {
+                                duration: 1000,
+                                delay: i * 200,
+                                loop: true,
+                                keyframes: [
+                                    { percent: 0.5, scaleY: 0.3, easing: 'cubicIn' },
+                                    { percent: 1, scaleY: 1, easing: 'cubicOut' }
+                                ]
+                            }
+                        }))
+                    }]
+                }
+            };
+            chartRadarMonths.setOption(loadingOptionRadar);
+
+            // Inicializar el gráfico radar con el año por defecto (2024)
+            setTimeout(() => {
+                updateRadarChart('2024');
+            }, 100);
+
+            function updateRadarChart(selectedYear) {
+                console.log("Actualizando radar con año:", selectedYear);
+                // Filtrar datos para el año seleccionado
+                const currentYearData = datosRadar
+                    .filter(d => d.periodo.startsWith(selectedYear))
+                    .sort((a, b) => parseInt(a.periodo.split('-')[1]) - parseInt(b.periodo.split('-')[1]));
+
+                console.log("Datos filtrados:", currentYearData);
+
+                // Encontrar el valor máximo para escalar el gráfico
+                const maxValue = Math.max(
+                    ...datosRadar.map(d => d.valor)
+                );
+
+                var optionRadarMonths = {
+                    title: {
+                        text: 'Meses con Mayor Dinámica',
+                        left: 'center',
+                        top: '1%',
+                        padding: [0, 0, 20, 0],  // padding adicional en la parte inferior del título
+                        subtext: `Año ${selectedYear}`
+                    },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: function(params) {
+                            const monthName = new Date(params.name + '-01').toLocaleString('es-CO', { month: 'long' });
+                            return monthName.charAt(0).toUpperCase() + monthName.slice(1) + '<br/>' +
+                                   params.value.toLocaleString('es-CO') + ' transacciones';
+                        }
+                    },
+                    legend: {
+                        show: false
+                    },
+                    radar: [{
+                        indicator: [
+                            { text: 'Enero', max: maxValue }, 
+                            { text: 'Febrero', max: maxValue }, 
+                            { text: 'Marzo', max: maxValue },
+                            { text: 'Abril', max: maxValue }, 
+                            { text: 'Mayo', max: maxValue }, 
+                            { text: 'Junio', max: maxValue },
+                            { text: 'Julio', max: maxValue }, 
+                            { text: 'Agosto', max: maxValue }, 
+                            { text: 'Septiembre', max: maxValue },
+                            { text: 'Octubre', max: maxValue }, 
+                            { text: 'Noviembre', max: maxValue }, 
+                            { text: 'Diciembre', max: maxValue }
+                        ],
+                        radius: '55%',
+                        center: ['50%', '55%'],
+                        name: {
+                            textStyle: {
+                                color: '#333',
+                                fontSize: 12
+                            }
+                        },
+                        splitLine: {
+                            lineStyle: {
+                                color: 'rgba(0,0,0,0.1)' // Lighter lines for radar grid
+                            }
+                        },
+                        splitArea: {
+                            areaStyle: {
+                                color: ['rgba(200,200,200,0.05)', 'rgba(200,200,200,0.1)'] // Lighter fill for radar areas
+                            }
+                        }
+                    }],
+                    series: [{
+                        type: 'radar',
+                        data: [{
+                            value: currentYearData.map(d => d.valor),
+                            name: selectedYear,
+                            symbolSize: 4,
+                            lineStyle: {
+                                width: 2
+                            },
+                            areaStyle: {
+                                opacity: 0.3
+                            }
+                        }]
+                    }]
+                };
+                chartRadarMonths.setOption(optionRadarMonths, true);
+            }
+
+            // --- Gráfico 3: Radar - Inmuebles Residenciales Vendidos por Estratos ---
+            var chartRadarStrata = echarts.init(document.getElementById("radar-chart-strata"), "essos");
+            chartRadarStrata.setOption(loadingOptionRadar); // Reusing loading animation
+
+            setTimeout(function () {
+                var optionRadarStrata = {
+                    title: {
+                        text: 'Inmuebles Residenciales Vendidos por Estratos',
+                        left: 'center',
+                        top: '2%',
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        left: 'center',
+                        top: 'bottom',
+                        orient: 'horizontal',
+                        data: ['Estrato 1-2', 'Estrato 3-4', 'Estrato 5-6'],
+                        textStyle: { color: '#333' }
+                    },
+                    radar: [{
+                        indicator: [
+                            { text: 'Usaquén', max: 100 }, { text: 'Chapinero', max: 100 }, { text: 'Suba', max: 100 },
+                            { text: 'Engativá', max: 100 }, { text: 'Kennedy', max: 100 }, { text: 'Teusaquillo', max: 100 }
+                        ],
+                        radius: 80,
+                        center: ['50%', '55%'],
+                        axisName: {
+                            color: '#333',
+                            fontSize: 12
+                        },
+                        splitLine: {
+                            lineStyle: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        splitArea: {
+                            areaStyle: {
+                                color: ['rgba(200,200,200,0.05)', 'rgba(200,200,200,0.1)']
+                            }
+                        }
+                    }],
+                    series: [{
+                        type: 'radar',
+                        tooltip: { trigger: 'item' },
+                        areaStyle: {},
+                        data: [
+                            { value: [70, 85, 60, 90, 75, 50], name: "Estrato 1-2" }, // Invented data
+                            { value: [80, 70, 90, 75, 85, 60], name: 'Estrato 3-4' }, // Invented data
+                            { value: [90, 60, 70, 80, 65, 95], name: 'Estrato 5-6' }  // Invented data
+                        ]
+                    }]
+                };
+                chartRadarStrata.setOption(optionRadarStrata, true);
+            }, 2000);
+
+            // --- Gráfico 4: Mapa interativo de localidades de Bogotá ---
+            var myChart = echarts.init(document.getElementById('map-grafico'), 'essos');
+            var loadingOptionMap = {
+                graphic: {
+                    elements: [{
+                        type: 'group',
+                        left: 'center',
+                        top: 'center',
+                        children: new Array(7).fill(0).map((val, i) => ({
+                            type: 'rect',
+                            x: i * 20,
+                            shape: { x: 0, y: -40, width: 10, height: 80 },
+                            style: { fill: '#5470c6' },
+                            keyframeAnimation: {
+                                duration: 1000,
+                                delay: i * 200,
+                                loop: true,
+                                keyframes: [
+                                    { percent: 0.5, scaleY: 0.3, easing: 'cubicIn' },
+                                    { percent: 1, scaleY: 1, easing: 'cubicOut' }
+                                ]
+                            }
+                        }))
+                    }]
+                }
+            };
+            myChart.setOption(loadingOptionMap);
+
+            setTimeout(function () {
+                const salesData = [
+                    { name: 'ANTONIO NARIÑO', value: 150 }, { name: 'TUNJUELITO', value: 220 },
+                    { name: 'USAQUÉN', value: 450 }, { name: 'CHAPINERO', value: 380 },
+                    { name: 'SANTA FE', value: 180 }, { name: 'SUBA', value: 550 },
+                    { name: 'ENGATIVÁ', value: 490 }, { name: 'FONTIBÓN', value: 320 },
+                    { name: 'KENNEDY', value: 610 }, { name: 'BOSA', value: 300 },
+                    { name: 'CIUDAD BOLÍVAR', value: 120 }, { name: 'USME', value: 90 },
+                    { name: 'SAN CRISTÓBAL', value: 110 }, { name: 'RAFAEL URIBE URIBE', value: 140 },
+                    { name: 'CANDELARIA', value: 70 }, { name: 'TEUSAQUILLO', value: 280 },
+                    { name: 'LOS MÁRTIRES', value: 60 }, { name: 'PUENTE ARANDA', value: 250 },
+                    { name: 'BARRIOS UNIDOS', value: 20 },
+                ];
+
+                fetch('localidades.geojson') // Assumes localidades.geojson is in the same directory
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok ' + response.statusText);
+                        }
+                        return response.json();
+                    })
+                    .then(geojson => {
+                        // Filter out SUMAPAZ as per original JS
+                        geojson.features = geojson.features.filter(feature =>
+                            feature.properties && feature.properties.LocNombre !== 'SUMAPAZ'
+                        );
+                        
+                        // Rotar el mapa intercambiando coordenadas x,y
+                        geojson.features.forEach(feature => {
+                            if (feature.geometry && feature.geometry.coordinates) {
+                                feature.geometry.coordinates.forEach(function rotatePolygon(coords) {
+                                    if (Array.isArray(coords[0]) && typeof coords[0][0] === 'number') {
+                                        // Es un array de coordenadas [x,y]
+                                        coords.forEach(point => {
+                                            const temp = point[0];
+                                            point[0] = point[1];
+                                            point[1] = -temp;
+                                        });
+                                    } else if (Array.isArray(coords[0])) {
+                                        // Es un array de arrays, seguir recursivamente
+                                        coords.forEach(rotatePolygon);
+                                    }
+                                });
+                            }
+                        });
+                        
+                        echarts.registerMap('BogotaLocalidades', geojson);
+                        const maxSales = Math.max(...salesData.map(item => item.value));
+
+                        var optionMap = {
+                            title: {
+                                text: 'Transacciones por Localidad en Bogotá',
+                                subtext: 'Fuente: Datos Inventados (Adaptar a CSV)',
+                                left: 'center'
+                            },
+                            tooltip: {
+                                trigger: 'item',
+                                formatter: function (params) {
+                                    if (params.data) {
+                                        return `Localidad: ${params.name}<br/>Ventas: ${params.value} inmuebles`;
+                                    }
+                                    return 'N/A';
+                                }
+                            },
+                            visualMap: {
+                                min: 0,
+                                max: maxSales,
+                                left: 'left',
+                                top: 'bottom',
+                                text: ['Alto', 'Bajo'],
+                                calculable: true,
+                                inRange: {
+                                    color: ['#e0ffff', '#006edd']
+                                },
+                                textStyle: { color: '#333' } 
+                            },
+                            series: [{
+                                name: 'Ventas de Inmuebles',
+                                type: 'map',
+                                map: 'BogotaLocalidades',
+                                roam: true,
+                                zoom: 1.2,
+                                aspectScale: 1,
+                                layoutCenter: ['50%', '50%'],
+                                layoutSize: '95%',
+                                transform: {
+                                    rotation: 90  // Rotamos el mapa 90 grados
+                                },
+                                selectedMode: false,
+                                label: {
+                                    show: true,
+                                    fontSize: 10,
+                                    color: '#000000'
+                                },
+                                itemStyle: {
+                                    areaColor: '#f0f0f0',
+                                    borderColor: '#000000'
+                                },
+                                emphasis: {
+                                    label: {
+                                        show: true,
+                                        color: '#000'
+                                    },
+                                    itemStyle: {
+                                        areaColor: '#ffd700'
+                                    }
+                                },
+                                data: salesData,
+                                nameProperty: 'LocNombre'
+                            }]
+                        };
+                        myChart.setOption(optionMap);
+                        window.addEventListener('resize', function () {
+                            myChart.resize();
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar o procesar el GeoJSON:', error);
+                        myChart.setOption({
+                            title: {
+                                text: 'Error al cargar el mapa',
+                                subtext: 'No se pudo cargar el archivo GeoJSON. Verifica la consola para más detalles.',
+                                left: 'center',
+                                top: 'center',
+                                textStyle: { color: '#e74c3c' }
+                            }
+                        });
+                    });
+            }, 4000);
+
+            // --- Gráfico 5: Barras con Iconos - Transacciones por Tipo de Propiedad ---
+            var chartIcons = echarts.init(document.getElementById("icons-chart"), "essos");
+            var loadingOptionIcons = {
+                graphic: {
+                    elements: [{
+                        type: 'group',
+                        left: 'center',
+                        top: 'center',
+                        children: new Array(7).fill(0).map((val, i) => ({
+                            type: 'rect',
+                            x: i * 20,
+                            shape: { x: 0, y: -40, width: 10, height: 80 },
+                            style: { fill: '#5470c6' },
+                            keyframeAnimation: {
+                                duration: 1000,
+                                delay: i * 200,
+                                loop: true,
+                                keyframes: [
+                                    { percent: 0.5, scaleY: 0.3, easing: 'cubicIn' },
+                                    { percent: 1, scaleY: 1, easing: 'cubicOut' }
+                                ]
+                            }
+                        }))
+                    }]
+                }
+            };
+            chartIcons.setOption(loadingOptionIcons);
+
+            setTimeout(function () {
+                chartIcons.clear();
+                const pathSymbols = {
+                    'apartmento': "path://M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z", // Placeholder for apartment icon
+                    'casa': "path://M1 6V15H6V11C6 9.89543 6.89543 9 8 9C9.10457 9 10 9.89543 10 11V15H15V6L8 0L1 6Z",
+                    'local': 'path://M4.87617 3.75H19.1238L21 8.86683V10.5C21 11.2516 20.7177 11.9465 20.25 12.4667V21H3.75V12.4667C3.28234 11.9465 3 11.2516 3 10.5V8.86683L4.87617 3.75ZM18.1875 13.3929C18.3807 13.3929 18.5688 13.3731 18.75 13.3355V19.5H15V15H9L9 19.5H5.25V13.3355C5.43122 13.3731 5.61926 13.3929 5.8125 13.3929C6.63629 13.3929 7.36559 13.0334 7.875 12.4667C8.38441 13.0334 9.11371 13.3929 9.9375 13.3929C10.7613 13.3929 11.4906 13.0334 12 12.4667C12.5094 13.0334 13.2387 13.3929 14.0625 13.3929C14.8863 13.3929 15.6156 13.0334 16.125 12.4667C16.6344 13.0334 17.3637 13.3929 18.1875 13.3929ZM10.5 19.5H13.5V16.5H10.5L10.5 19.5ZM19.5 9.75V10.5C19.5 11.2965 18.8856 11.8929 18.1875 11.8929C17.4894 11.8929 16.875 11.2965 16.875 10.5V9.75H19.5ZM19.1762 8.25L18.0762 5.25H5.92383L4.82383 8.25H19.1762ZM4.5 9.75V10.5C4.5 11.2965 5.11439 11.8929 5.8125 11.8929C6.51061 11.8929 7.125 11.2965 7.125 10.5V9.75H4.5ZM8.625 9.75V10.5C8.625 11.2965 9.23939 11.8929 9.9375 11.8929C10.6356 11.8929 11.25 11.2965 11.25 10.5V9.75H8.625ZM12.75 9.75V10.5C12.75 11.2965 13.3644 11.8929 14.0625 11.8929C14.7606 11.8929 15.375 11.2965 15.375 10.5V9.75H12.75Z"',
+                    'oficina': 'path://M3.55,119.32H0v3.56H92.49v-3.56h-2v-17a1.22,1.22,0,0,0-1.22-1.22H75.54a1.22,1.22,0,0,0-1.22,1.22v17H48.47V95.23a1.63,1.63,0,0,0-1.63-1.62H19.94a1.63,1.63,0,0,0-1.63,1.62v24.09H0V2.6A2.79,2.79,0,0,1,.82.85h0a2.84,2.84,0,0,1,2-.84H63.93a2.82,2.82,0,0,1,2,.84l.13.13a2.83,2.83,0,0,1,.72,1.89V34.57H102a2.39,2.39,0,0,1,1.69.7h0a2.36,2.36,0,0,1,.7,1.68v84.29a1.63,1.63,0,0,1-1.63,1.63H92.49v-3.56H101V38H66.79v81.34H63.23V3.56H3.55V119.32Zm84.54,0H76.76V103.5H88.09v15.82ZM85.45,45h8.81c.07,0,.13.1.13.22v5.71c0,.1-.06.21-.13.21H85.45c-.07,0-.13-.09-.13-.21V45.22c0-.12.06-.22.13-.22Zm0,39.6h8.81c.07,0,.13.1.13.21v5.71c0,.11-.06.22-.13.22H85.45c-.07,0-.13-.1-.13-.22V84.81c0-.11.06-.21.13-.11Zm-14.85,0h8.8c.08,0,.14.1.14.21v5.71c0,.11-.06.22-.14.22H70.6c-.08,0-.14-.1-.14-.22V84.81c0-.11.06-.21.14-.21ZM85.45,71.4h8.81c.07,0,.13.1.13.22v5.71c0,.11-.06.22-.13.22H85.45c-.07,0-.13-.1-.13-.22V71.62c0-.13.06-.22.13-.22Zm0-13.2h8.81c.07,0,.13.1.13.22v5.71c0,.11-.06.22-.13.22H85.45c-.07,0-.13-.1-.13-.22V58.42c0-.12.06-.22.13-.22ZM70.6,45h8.8c.08,0,.14.1.14.22v5.71c0,.1-.06.21-.14.21H70.6c-.08,0-.14-.09-.14-.21V45.22c0-.12.06-.22.14-.22Zm0,26.4h8.8c.08,0,.14.1.14.22v5.71c0,.11-.06.22-.14.22H70.6c-.08,0-.14-.1-.14-.22V71.62c0-.13.06-.22.14-.22Zm0-13.2h8.8c.08,0,.14.1.14.22v5.71c0,.11-.06.22-.14.22H70.6c-.08,0-.14-.1-.14-.22V58.42c0-.12.06-.22.14-.22ZM45.21,119.32H21.57V96.86H45.21v22.46ZM12.13,12.52h9.58a.28.28,0,0,1,.27.27v9.59a.28.28,0,0,1-.27.27H12.13a.28.28,0,0,1-.27-.27V12.79a.28.28,0,0,1,.27-.27Zm32.94,0h9.58a.28.28,0,0,1,.27.27v9.59a.28.28,0,0,1-.27.27H45.07a.28.28,0,0,1-.27-.27V12.79a.28.28,0,0,1,.27-.27Zm-16.47,0h9.58a.28.28,0,0,1-.27.27v9.59a.28.28,0,0,1-.27.27H28.6a.28.28,0,0,1-.27-.27V12.79a.28.28,0,0,1,.27-.27ZM12.13,33.28h9.58a.28.28,0,0,1,.27.27v9.59a.28.28,0,0,1-.27.27H12.13a.28.28,0,0,1-.27-.27V33.55a.28.28,0,0,1,.27-.27Zm32.94,0h9.58a.28.28,0,0,1,.27.27v9.59a.28.28,0,0,1-.27.27H45.07a.28.28,0,0,1-.27-.27V33.55a.28.28,0,0,1,.27-.27Zm-16.47,0h9.58a.28.28,0,0,1-.27.27v9.59a.28.28,0,0,1-.27.27H28.6a.28.28,0,0,1-.27-.27V33.55a.28.28,0,0,1,.27-.27ZM12.13,74.8h9.58a.27.27,0,0,1,.27.27v9.58a.27.27,0,0,1-.27.27H12.13a.27.27,0,0,1-.27-.27V75.07a.27.27,0,0,1,.27-.27Zm32.94,0h9.58a.27.27,0,0,1,.27.27v9.58a.27.27,0,0,1-.27.27H45.07a.27.27,0,0,1-.27-.27V75.07a.27.27,0,0,1,.27-.27Zm-16.47,0h9.58a.27.27,0,0,1-.27.27v9.58a.27.27,0,0,1-.27.27H28.6a.27.27,0,0,1-.27-.27V75.07a.27.27,0,0,1,.27-.27ZM12.13,54h9.58a.27.27,0,0,1,.27.27V63.9a.28.28,0,0,1-.27.27H12.13a.28.28,0,0,1-.27-.27V54.31a.27.27,0,0,1,.27-.27Zm32.94,0h9.58a.27.27,0,0,1,.27.27V63.9a.28.28,0,0,1-.27.27H45.07a.28.28,0,0,1-.27-.27V54.31a.27.27,0,0,1,.27-.27ZM28.6,54h9.58a.27.27,0,0,1,.27.27V63.9a.28.28,0,0,1-.27.27H28.6a.28.28,0,0,1-.27-.27V54.31A.27.27,0,0,1,28.6,54Z',
+                    'resto': "path://M21 9.75H19.5V18.3107L18.3107 19.5H5.68934L4.5 18.3107L4.5 9.75H3V4.5H21V9.75ZM6 9.75L18 9.75V17.6893L17.6893 18H6.31066L6 17.6893L6 9.75ZM19.5 6V8.25L4.5 8.25L4.5 6L19.5 6ZM9.75 13.5H15V12H9.75V13.5Z"
+                };
+                const labelSetting = {
+                    show: true,
+                    position: 'right',
+                    offset: [10, 0],
+                    fontSize: 16,
+                    color: '#333' // Dark text for labels
+                };
+
+                // Function to update the Icons Chart based on filters
+                function updateIconsChart(timePeriod, year) {
+                    let dataToDisplay = [];
+                    let chartTitle = 'Transacciones por Tipo de Propiedad';
+
+                    let rawData = [];
+                    if (timePeriod === 'año') {
+                        rawData = propertyTypeData[year] || [];
+                    } else if (timePeriod === 'semestre') {
+                        rawData = propertyTypeData.semestre[year] || [];
+                    } else if (timePeriod === 'trimestre') {
+                        rawData = propertyTypeData.trimestre[year] || [];
+                    }
+
+                    const orden = ['Apartamento', 'Casa', 'Oficina', 'Local', 'Resto'];
+                    dataToDisplay = orden.map(tipo => {
+                        const found = rawData.find(d => d.name.trim() === tipo.trim());
+                        return found || { value: 0, name: tipo };
+                    });
+                    if (year === 'historico') {
+                        // Sum data for all years
+                        const aggregatedData = {};
+                        for (let y = 2019; y <= 2025; y++) {
+                            if (propertyTypeData[y]) {
+                                propertyTypeData[y].forEach(item => {
+                                    if (!aggregatedData[item.name]) {
+                                        aggregatedData[item.name] = 0;
+                                    }
+                                    aggregatedData[item.name] += item.value;
+                                });
+                            }
+                        }
+                        dataToDisplay = Object.keys(aggregatedData).map(name => ({
+                            value: aggregatedData[name],
+                            name: name
+                        }));
+                        chartTitle += ' (Histórico 2019-2025)';
+                    } else if (timePeriod === 'semestre') {
+                        // For semestre, we need to show both semesters of the selected year
+                        const semester1Data = propertyTypeData.semestre[`${year}-1`] || [];
+                        const semester2Data = propertyTypeData.semestre[`${year}-2`] || [];
+
+                        // Aggregate data for the two semesters for display
+                        const aggregatedSemesterData = {};
+                        semester1Data.forEach(item => {
+                            aggregatedSemesterData[item.name] = item.value;
+                        });
+                        semester2Data.forEach(item => {
+                            if (!aggregatedSemesterData[item.name]) {
+                                aggregatedSemesterData[item.name] = 0;
+                            }
+                            aggregatedSemesterData[item.name] += item.value;
+                        });
+
+                        dataToDisplay = Object.keys(aggregatedSemesterData).map(name => ({
+                            value: aggregatedSemesterData[name],
+                            name: name
+                        }));
+                        chartTitle += ` (${year} - Semestres)`;
+
+                    } else if (timePeriod === 'trimestre') {
+                        // For trimestre, we need to show all four quarters of the selected year
+                        const q1Data = propertyTypeData.trimestre[`${year}-1`] || [];
+                        const q2Data = propertyTypeData.trimestre[`${year}-2`] || [];
+                        const q3Data = propertyTypeData.trimestre[`${year}-3`] || [];
+                        const q4Data = propertyTypeData.trimestre[`${year}-4`] || [];
+
+                        const aggregatedQuarterData = {};
+                        [...q1Data, ...q2Data, ...q3Data, ...q4Data].forEach(item => {
+                            if (!aggregatedQuarterData[item.name]) {
+                                aggregatedQuarterData[item.name] = 0;
+                            }
+                            aggregatedQuarterData[item.name] += item.value;
+                        });
+
+                        dataToDisplay = Object.keys(aggregatedQuarterData).map(name => ({
+                            value: aggregatedQuarterData[name],
+                            name: name
+                        }));
+                        chartTitle += ` (${year} - Trimestres)`;
+                    }
+
+                    // Ensure data order is consistent with yAxis categories
+                    const yAxisCategories = ['Apartamento', 'Casa', 'Oficina', 'Local', 'Resto'];
+                    const formattedData = yAxisCategories.map(category => {
+                        // Buscar el dato correspondiente a esta categoría
+                        const item = dataToDisplay.find(d => d.name.trim() === category.trim());
+                        // Si se encuentra el dato, usar su valor, si no, usar 0
+                        const value = item ? item.value : 0;
+                        return {
+                            value: value,
+                            name: category,
+                            symbol: pathSymbols[category.toLowerCase().replace(' ', '')] || pathSymbols.resto
+                        };
+                    }); // No reverse here since we'll use inverse: true in yAxis
+
+                    const optionIcons = {
+                        title: {
+                            text: chartTitle,
+                            top: '0%',
+                            left: 'center'
+                        },
+                        legend: {
+                            show: false // No legend needed for single series
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: { type: 'shadow' },
+                            formatter: function (params) {
+                                return `${params[0].name}: ${params[0].value.toLocaleString('es-CO')}`;
+                            }
+                        },
+                        grid: {
+                            containLabel: true,
+                            left: 20,
+                            right: 50 // Added right padding for labels
+                        },
+                        yAxis: {
+                            data: yAxisCategories,
+                            inverse: true,
+                            axisLine: { show: false },
+                            axisTick: { show: false },
+                            axisLabel: {
+                                margin: 20,
+                                fontSize: 14,
+                                color: '#333'
+                            },
+                            axisPointer: {
+                                label: { show: true, margin: 200 }
+                            }
+                        },
+                        xAxis: {
+                            splitLine: { show: false },
+                            axisLabel: { show: false },
+                            axisTick: { show: false },
+                            axisLine: { show: false }
+                        },
+                        series: [{
+                            name: 'Transacciones',
+                            type: 'pictorialBar',
+                            label: labelSetting,
+                            symbolRepeat: true,
+                            symbolSize: ['80%', '60%'],
+                            barCategoryGap: '40%',
+                            data: formattedData
+                        }]
+                    };
+                    chartIcons.setOption(optionIcons, true);
+                }
+
+                // Get filter elements
+                const filterIconsTime = document.getElementById('filter-icons-time');
+                const filterIconsYear = document.getElementById('filter-icons-year');
+
+                // Initial chart render
+                updateIconsChart(filterIconsTime.value, filterIconsYear.value);
+
+                // Add event listeners for filters
+                filterIconsTime.addEventListener('change', () => {
+                    updateIconsChart(filterIconsTime.value, filterIconsYear.value);
+                });
+                filterIconsYear.addEventListener('change', () => {
+                    updateIconsChart(filterIconsTime.value, filterIconsYear.value);
+                });
+
+                // Get line chart filter element
+                const filterLineTime = document.getElementById('filter-line-time');
+
+                // Initial line chart render
+                updateLineChart(filterLineTime.value);
+
+                // Add event listener for line chart filter
+                filterLineTime.addEventListener('change', () => {
+                    updateLineChart(filterLineTime.value);
+                });
+            }, 2000);
+
+
+            // --- Gráfico 6: Gauge - Transacciones de inmuebles Usados y Nuevos (Condición Jurídica) ---
+            var chartTort = echarts.init(document.getElementById("tort-chart"), "essos");
+            var loadingOptionTort = { // Reusing loading animation
+                graphic: {
+                    elements: [{
+                        type: 'group',
+                        left: 'center',
+                        top: 'center',
+                        children: new Array(7).fill(0).map((val, i) => ({
+                            type: 'rect',
+                            x: i * 20,
+                            shape: { x: 0, y: -40, width: 10, height: 80 },
+                            style: { fill: '#5470c6' },
+                            keyframeAnimation: {
+                                duration: 1000,
+                                delay: i * 200,
+                                loop: true,
+                                keyframes: [
+                                    { percent: 0.5, scaleY: 0.3, easing: 'cubicIn' },
+                                    { percent: 1, scaleY: 1, easing: 'cubicOut' }
+                                ]
+                            }
+                        }))
+                    }]
+                }
+            };
+            chartTort.setOption(loadingOptionTort);
+
+            setTimeout(function () {
+                const chartTortData = [
+                    {
+                        value: 20,
+                        name: 'Propiedad Horizontal', // Changed from 'Nuevo'
+                        title: { offsetCenter: ['0%', '-45%'], fontSize: 18, color: '#333' },
+                        detail: { valueAnimation: true, offsetCenter: ['0%', '-25%'], fontSize: 16, color: '#00eaff' }
+                    },
+                    {
+                        value: 40,
+                        name: 'No Horizontal', // Changed from 'Usado'
+                        title: { offsetCenter: ['0%', '15%'], fontSize: 18, color: '#333' },
+                        detail: { valueAnimation: true, offsetCenter: ['0%', '35%'], fontSize: 16, color: '#00eaff' }
+                    }
+                ];
+                var optionTort = {
+                    title: {
+                        text: 'Transacciones por Condición Jurídica\n(Horizontal vs No Horizontal)',
+                        left: 'center',
+                        top: '2%',
+                        textStyle: {
+                            color: '#333',
+                            fontSize: 20,
+                            fontWeight: 'bold',
+                            lineHeight: 26,
+                        }
+                    },
+                    series: [{
+                        type: 'gauge',
+                        startAngle: 90,
+                        endAngle: -270,
+                        center: ['50%', '60%'],
+                        pointer: { show: false },
+                        progress: {
+                            show: true,
+                            overlap: false,
+                            roundCap: true,
+                            clip: false,
+                            itemStyle: { borderWidth: 1, borderColor: '#ccc' } // Lighter border for gauge
+                        },
+                        axisLine: { lineStyle: { width: 40 } },
+                        splitLine: { show: false, distance: 0, length: 10 },
+                        axisTick: { show: false },
+                        axisLabel: { show: false, distance: 50 },
+                        data: chartTortData,
+                        title: { fontSize: 18, color: '#333' },
+                        detail: {
+                            width: 60, height: 18, fontSize: 16, color: '#00eaff',
+                            borderColor: 'inherit', borderRadius: 20, borderWidth: 1,
+                            formatter: '{value}%'
+                        }
+                    }]
+                };
+                setInterval(function () {
+                    chartTortData[0].value = +(Math.random() * 100).toFixed(2);
+                    chartTortData[1].value = +(Math.random() * 100).toFixed(2);
+                    chartTort.setOption({ series: [{ data: chartTortData }] });
+                }, 2000);
+                chartTort.setOption(optionTort, true);
+            }, 2000);
+
+            // --- Gráfico 7: Gauge - Transacciones Residenciales ---
+            var chartResidencial = echarts.init(document.getElementById("residencial-chart"), "essos");
+            var loadingOptionGauge = { // Reusing loading animation
+                graphic: {
+                    elements: [{
+                        type: 'group',
+                        left: 'center',
+                        top: 'center',
+                        children: new Array(7).fill(0).map((val, i) => ({
+                            type: 'rect',
+                            x: i * 20,
+                            shape: { x: 0, y: -40, width: 10, height: 80 },
+                            style: { fill: '#5470c6' },
+                            keyframeAnimation: {
+                                duration: 1000,
+                                delay: i * 200,
+                                loop: true,
+                                keyframes: [
+                                    { percent: 0.5, scaleY: 0.3, easing: 'cubicIn' },
+                                    { percent: 1, scaleY: 1, easing: 'cubicOut' }
+                                ]
+                            }
+                        }))
+                    }]
+                }
+            };
+            chartResidencial.setOption(loadingOptionGauge);
+            setTimeout(function () {
+                var optionResidencial = {
+                    title: {
+                        text: 'Transacciones Residenciales',
+                        left: 'center',
+                        top: 0,
+                        textStyle: { color: '#333', fontSize: 18 }
+                    },
+                    tooltip: { formatter: "{a} <br/>{b} : {c}" },
+                    series: [{
+                        name: "Transacciones",
+                        type: "gauge",
+                        center: ['50%', '60%'],
+                        radius: '85%',
+                        progress: { show: true },
+                        detail: {
+                            valueAnimation: true,
+                            formatter: function (value) { return value.toLocaleString('es-CO'); },
+                            color: '#333'
+                        },
+                        min: 0, max: 200000,
+                        data: [{ value: 180955 }], // Invented data
+                        nameTextStyle: { color: '#333' },
+                        axisLabel: { show: false },
+                        pointer: { length: '60%', width: 6, itemStyle: { color: '#333' } },
+                        axisLine: { lineStyle: { width: 10 } },
+                        splitLine: { length: 10, lineStyle: { color: '#333' } },
+                        axisTick: { length: 5, lineStyle: { color: '#333' } }
+                    }]
+                };
+                chartResidencial.setOption(optionResidencial, true);
+            }, 2000);
+
+            // --- Gráfico 8: Gauge - Transacciones No Residenciales ---
+            var chartNoResidencial = echarts.init(document.getElementById("noResidencial-chart"), "essos");
+            chartNoResidencial.setOption(loadingOptionGauge);
+            setTimeout(function () {
+                var optionNoResidencial = {
+                    title: {
+                        text: 'Transacciones no Residenciales',
+                        left: 'center',
+                        top: 0,
+                        textStyle: { color: '#333', fontSize: 18 }
+                    },
+                    tooltip: { formatter: "{a} <br/>{b} : {c}" },
+                    series: [{
+                        name: "Transacciones",
+                        type: "gauge",
+                        center: ['50%', '60%'],
+                        radius: '85%',
+                        progress: { show: true },
+                        min: 0, max: 200000,
+                        detail: {
+                            valueAnimation: true,
+                            formatter: function (value) { return value.toLocaleString('es-CO'); },
+                            color: '#333'
+                        },
+                        data: [{ value: 130312 }], // Invented data
+                        nameTextStyle: { color: '#333' },
+                        axisLabel: { show: false },
+                        pointer: { length: '60%', width: 6, itemStyle: { color: '#333' } },
+                        axisLine: { lineStyle: { width: 10 } },
+                        splitLine: { length: 10, lineStyle: { color: '#333' } },
+                        axisTick: { length: 5, lineStyle: { color: '#333' } }
+                    }]
+                };
+                chartNoResidencial.setOption(optionNoResidencial, true);
+            }, 2000);
+
+
+            // --- Gráfico 9: Barras - Transacciones por Localidad (Original chart1 from user's JS) ---
+            var mainBarChart = echarts.init(document.getElementById("main-bar-chart"), "essos");
+            var loadingOptionBar = { // Reusing loading animation
+                graphic: {
+                    elements: [{
+                        type: 'group',
+                        left: 'center',
+                        top: 'center',
+                        children: new Array(7).fill(0).map((val, i) => ({
+                            type: 'rect',
+                            x: i * 20,
+                            shape: { x: 0, y: -40, width: 10, height: 80 },
+                            style: { fill: '#5470c6' },
+                            keyframeAnimation: {
+                                duration: 1000,
+                                delay: i * 200,
+                                loop: true,
+                                keyframes: [
+                                    { percent: 0.5, scaleY: 0.3, easing: 'cubicIn' },
+                                    { percent: 1, scaleY: 1, easing: 'cubicOut' }
+                                ]
+                            }
+                        }))
+                    }]
+                }
+            };
+            mainBarChart.setOption(loadingOptionBar);
+
+            setTimeout(function () {
+                var optionBar = {
+                    title: {
+                        text: "Transacciones por Localidad (Bogotá)",
+                        left: "center"
+                    },
+                    tooltip: { trigger: "axis" },
+                    xAxis: {
+                        type: "category",
+                        axisLabel: { color: '#333' },
+                        axisLine: { lineStyle: { color: '#333' } },
+                        data: [
+                            "Usaquén", "Chapinero", "Santa Fe", "San Cristóbal",
+                            "Suba", "Engativá", "Kennedy", "Bosa", "Fontibón",
+                            "Teusaquillo", "Los Mártires", "Antonio Nariño"
+                        ],
+                    },
+                    yAxis: {
+                        type: "value",
+                        name: "Cantidad",
+                        nameTextStyle: { color: '#333' },
+                        axisLabel: { color: '#333' },
+                        axisLine: { lineStyle: { color: '#333' } },
+                    },
+                    series: [{
+                        name: "Transacciones",
+                        type: "bar",
+                        data: [320, 280, 150, 200, 450, 400, 520, 300, 350, 280, 100, 180], 
+                        itemStyle: { borderRadius: [5, 5, 0, 0] },
+                        label: { show: true, position: 'top', color: '#333' }
+                    }],
+                };
+                mainBarChart.setOption(optionBar, true);
+            }, 2000);
+
+
+            // --- Responsive resize for all charts ---
+            window.addEventListener('resize', function () {
+                lineChart.resize();
+                chartRadarMonths.resize();
+                chartRadarStrata.resize();
+                myChart.resize();
+                chartIcons.resize();
+                chartTort.resize();
+                chartResidencial.resize();
+                chartNoResidencial.resize();
+                mainBarChart.resize();
+            });
+        });
+    </script>
+</body>
+
+</html>
