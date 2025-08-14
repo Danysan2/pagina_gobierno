@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gráfico Venta Total de Inmuebles</title>
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+<style>
+body {
+    font-family: "Nunito Sans", sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 0;
+}
+.chart-card {
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+}
+.echart-container {
+    width: 100%;
+    height: 400px;
+}
+</style>
+</head>
+<body>
+
+<div class="chart-card">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">Venta Total de Inmuebles en Bogotá</h2>
+    <select id="filter-line-time" class="p-2 border border-gray-300 rounded-md mb-4">
+        <option value="año">Año</option>
+        <option value="semestre">Semestre</option>
+        <option value="trimestre">Trimestre</option>
+    </select>
+    <div id="line-chart" class="echart-container"></div>
+</div>
+
+<script>
+// Datos
+const dataLine = [
+    { tipo: "anio", periodo: "2019", total: 67697 },
+    { tipo: "anio", periodo: "2020", total: 67264 },
+    { tipo: "anio", periodo: "2021", total: 103197 },
+    { tipo: "anio", periodo: "2022", total: 103413 },
+    { tipo: "anio", periodo: "2023", total: 82958 },
+    { tipo: "anio", periodo: "2024", total: 90028 },
+    { tipo: "anio", periodo: "2025", total: 30605 },
+    { tipo: "semestre", periodo: "2019-1", total: 28952 },
+    { tipo: "semestre", periodo: "2019-2", total: 38745 },
+    { tipo: "semestre", periodo: "2020-1", total: 21744 },
+    { tipo: "semestre", periodo: "2020-2", total: 45520 },
+    { tipo: "semestre", periodo: "2021-1", total: 43876 },
+    { tipo: "semestre", periodo: "2021-2", total: 59321 },
+    { tipo: "semestre", periodo: "2022-1", total: 46650 },
+    { tipo: "semestre", periodo: "2022-2", total: 56763 },
+    { tipo: "semestre", periodo: "2023-1", total: 32523 },
+    { tipo: "semestre", periodo: "2023-2", total: 50435 },
+    { tipo: "semestre", periodo: "2024-1", total: 37446 },
+    { tipo: "semestre", periodo: "2024-2", total: 52582 },
+    { tipo: "semestre", periodo: "2025-1", total: 30602 },
+    { tipo: "semestre", periodo: "2025-2", total: 3 },
+    { tipo: "trimestre", periodo: "2019-1", total: 14230 },
+    { tipo: "trimestre", periodo: "2019-2", total: 14722 },
+    { tipo: "trimestre", periodo: "2019-3", total: 20537 },
+    { tipo: "trimestre", periodo: "2019-4", total: 18208 },
+    { tipo: "trimestre", periodo: "2020-1", total: 12648 },
+    { tipo: "trimestre", periodo: "2020-2", total: 9096 },
+    { tipo: "trimestre", periodo: "2020-3", total: 17220 },
+    { tipo: "trimestre", periodo: "2020-4", total: 28300 },
+    { tipo: "trimestre", periodo: "2021-1", total: 18973 },
+    { tipo: "trimestre", periodo: "2021-2", total: 24903 },
+    { tipo: "trimestre", periodo: "2021-3", total: 27254 },
+    { tipo: "trimestre", periodo: "2021-4", total: 32067 },
+    { tipo: "trimestre", periodo: "2022-1", total: 21300 },
+    { tipo: "trimestre", periodo: "2022-2", total: 25350 },
+    { tipo: "trimestre", periodo: "2022-3", total: 26754 },
+    { tipo: "trimestre", periodo: "2022-4", total: 30009 },
+    { tipo: "trimestre", periodo: "2023-1", total: 11180 },
+    { tipo: "trimestre", periodo: "2023-2", total: 21343 },
+    { tipo: "trimestre", periodo: "2023-3", total: 23871 },
+    { tipo: "trimestre", periodo: "2023-4", total: 26564 },
+    { tipo: "trimestre", periodo: "2024-1", total: 15103 },
+    { tipo: "trimestre", periodo: "2024-2", total: 22343 },
+    { tipo: "trimestre", periodo: "2024-3", total: 24438 },
+    { tipo: "trimestre", periodo: "2024-4", total: 28144 },
+    { tipo: "trimestre", periodo: "2025-1", total: 16267 },
+    { tipo: "trimestre", periodo: "2025-2", total: 14335 }
+];
+
+// Inicializar gráfico
+var lineChart = echarts.init(document.getElementById("line-chart"));
+
+// Función para actualizar el gráfico
+function updateLineChart(timePeriod) {
+    let filteredData = [];
+    let chartTitle = "Venta Total de Inmuebles en Bogotá";
+
+    if (timePeriod === "año") {
+        filteredData = dataLine.filter((d) => d.tipo === "anio");
+        chartTitle += " (2019-2025)";
+    } else if (timePeriod === "semestre") {
+        filteredData = dataLine.filter((d) => d.tipo === "semestre");
+        chartTitle += " (Semestral)";
+    } else if (timePeriod === "trimestre") {
+        filteredData = dataLine.filter((d) => d.tipo === "trimestre");
+        chartTitle += " (Trimestral)";
+    }
+
+    const optionLine = {
+        title: { text: chartTitle, left: "center" },
+        tooltip: {
+            trigger: "axis",
+            formatter: (params) => params[0].name + ": " + params[0].value.toLocaleString("es-CO") + " transacciones"
+        },
+        xAxis: {
+            type: "category",
+            data: filteredData.map((d) => d.periodo),
+            axisLabel: { rotate: timePeriod === "año" ? 0 : 45 }
+        },
+        yAxis: {
+            type: "value",
+            axisLabel: { formatter: (value) => value.toLocaleString("es-CO") }
+        },
+        series: [{
+            name: "Total",
+            type: "line",
+            data: filteredData.map((d) => d.total),
+            symbol: "circle",
+            symbolSize: 6,
+            lineStyle: { width: 3 },
+            itemStyle: { color: "rgba(255, 171, 0)" },
+            areaStyle: { color: "rgba(255, 171, 0, 0.3)" }
+        }]
+    };
+
+    lineChart.setOption(optionLine);
+}
+
+// Cargar por defecto "año"
+updateLineChart("año");
+
+// Evento cambio de filtro
+document.getElementById("filter-line-time").addEventListener("change", function() {
+    updateLineChart(this.value);
+});
+</script>
+
+</body>
+</html>
